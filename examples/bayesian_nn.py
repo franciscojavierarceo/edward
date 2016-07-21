@@ -26,6 +26,22 @@ from edward.models import Variational, Normal
 from edward.stats import norm
 from edward.util import rbf
 
+def create_dir(art_id):
+    """
+    Creates a new directory for the article if it doesn't exist
+    :param art_id: string, descriptive folder name for article
+
+    :returns out_path: abs path to new directory
+    """
+    # I suspect this is unnecessary because sys.argv will error
+    if ' ' in art_id:
+        art_id = art_id.replace(' ', '_')
+
+    if not os.path.isdir(art_id):
+        os.mkdir(art_id)
+
+    return os.path.join(os.getcwd(), art_id)
+
 class BayesianNN:
     """
     Bayesian neural network for regressing outputs y on inputs x.
@@ -117,6 +133,8 @@ inference = ed.MFVI(model, variational, data)
 inference.initialize(n_print=1)
 loss_vof = []
 
+create_dir('./tmp_plots')
+
 for t in range(1000):
     loss = inference.update()
     loss_vof.append(loss)
@@ -140,22 +158,22 @@ for t in range(1000):
         ax = fig.add_subplot(111, frameon=False)
         ax.plot(x, y, 'bx')
         ax.plot(inputs, outputs.T)
-        ax.set_xlim([-8, 8])
+        ax.set_xlim([-10, 10])
         ax.set_ylim([-2, 3])
-        plt.savefig('%i_p.jpeg' % t)
+        plt.savefig('./tmp_plots/%i_p.jpeg' % t)
         plt.close()
 
 # Pulling in the images that were exported 
-file_names = sorted((fn for fn in os.listdir('.') if fn.endswith('_p.jpeg')))
+file_names = sorted((fn for fn in os.listdir('./tmp_plots/') if fn.endswith('_p.jpeg')))
 
 # Collecting all of the images
 images = []
 for filename in file_names:
-    images.append(imageio.imread(filename))
+    images.append(imageio.imread('./tmp_plots/'+filename))
 imageio.mimsave('movie_bayesian_nn.gif', images)
 
 # Removing all of the old files
-os.system('rm *.jpeg')
+os.system('rm -rf ./tmp_plots/')
 
 # Plotting the variational objective function
 plt.figure(figsize=(12,8))
