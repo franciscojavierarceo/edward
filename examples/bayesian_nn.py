@@ -15,6 +15,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os
+import imageio
 import edward as ed
 import matplotlib.pyplot as plt
 import numpy as np
@@ -23,7 +25,6 @@ import tensorflow as tf
 from edward.models import Variational, Normal
 from edward.stats import norm
 from edward.util import rbf
-
 
 class BayesianNN:
     """
@@ -94,7 +95,6 @@ class BayesianNN:
         log_lik = -tf.reduce_sum(tf.pow(mus - y, 2), 1) / self.lik_variance
         return log_lik + log_prior
 
-
 def build_toy_dataset(N=40, noise_std=0.1):
     ed.set_seed(0)
     D = 1
@@ -105,27 +105,23 @@ def build_toy_dataset(N=40, noise_std=0.1):
     x = x.reshape((N, D))
     return {'x': x, 'y': y}
 
-
 ed.set_seed(42)
-model = BayesianNN(layer_sizes=[1, 10, 10, 1], nonlinearity=rbf)
+# model = BayesianNN(layer_sizes=[1, 10, 10, 1], nonlinearity=rbf)
+model = BayesianNN(layer_sizes=[1, 10, 10, 1], nonlinearity= tf.nn.tanh)
 variational = Variational()
 variational.add(Normal(model.n_vars))
 data = build_toy_dataset()
 
-# Set up figure
-fig = plt.figure(figsize=(8,8), facecolor='white')
-ax = fig.add_subplot(111, frameon=False)
-plt.ion()
-plt.show(block=False)
-
 sess = ed.get_session()
 inference = ed.MFVI(model, variational, data)
-inference.initialize(n_print=100)
+inference.initialize(n_print=1)
+loss_vof = []
+
 for t in range(1000):
     loss = inference.update()
+    loss_vof.append(loss)
     if t % inference.n_print == 0:
-        print("iter {:d} loss {:.2f}".format(t, loss))
-
+        # print("iter {:d} loss {:.2f}".format(t, loss))
         # Sample functions from variational model
         mean, std = sess.run([variational.layers[0].loc,
                               variational.layers[0].scale])
@@ -139,12 +135,33 @@ for t in range(1000):
 
         # Get data
         x, y = data['x'], data['y']
-
         # Plot data and functions
-        plt.cla()
+        fig = plt.figure(figsize=(8,8), facecolor='white')
+        ax = fig.add_subplot(111, frameon=False)
         ax.plot(x, y, 'bx')
         ax.plot(inputs, outputs.T)
         ax.set_xlim([-8, 8])
         ax.set_ylim([-2, 3])
-        plt.draw()
-        plt.pause(1.0/60.0)
+        plt.savefig('%i_p.jpeg' % t)
+        plt.close()
+
+# Pulling in the images that were exported 
+file_names = sorted((fn for fn in os.listdir('.') if fn.endswith('_p.jpeg')))
+
+# Collecting all of the images
+images = []
+for filename in file_names:
+    images.append(imageio.imread(filename))
+imageio.mimsave('movie_bayesian_nn.gif', images)
+
+# Removing all of the old files
+os.system('rm *.jpeg')
+
+# Plotting the variational objective function
+plt.figure(figsize=(12,8))
+plt.plot(range(len(loss_vof)), loss_vof, c='red')
+plt.grid() 
+plt.title('Variational Objective Function')
+plt.ylabel("Variational Objective Function")
+plt.xlabel("Iteration")
+plt.savefig('vof_bnn.jpeg')
