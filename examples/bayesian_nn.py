@@ -160,6 +160,12 @@ for t in range(1000):
         ax.plot(inputs, outputs.T)
         ax.set_xlim([-10, 10])
         ax.set_ylim([-2, 3])
+        # Adding leading zeros for the sort later
+
+        t = str(t)
+        if len(t)!=3:
+            t = ((3-len(t)) * '0') + t
+
         plt.savefig('./tmp_plots/%i_p.jpeg' % t)
         plt.close()
 
@@ -173,7 +179,7 @@ for filename in file_names:
 imageio.mimsave('movie_bayesian_nn.gif', images)
 
 # Removing all of the old files
-os.system('rm -rf ./tmp_plots/')
+#os.system('rm -rf ./tmp_plots/')
 
 # Plotting the variational objective function
 plt.figure(figsize=(12,8))
