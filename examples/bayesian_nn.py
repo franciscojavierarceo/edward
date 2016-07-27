@@ -154,10 +154,12 @@ for t in range(1000):
         # Get data
         x, y = data['x'], data['y']
         # Plot data and functions
-        fig = plt.figure(figsize=(8,8), facecolor='white')
-        ax = fig.add_subplot(111, frameon=False)
+        fig = plt.figure(figsize=(12,8), facecolor='white')
+        ax = fig.add_subplot(111, frameon=True)
         ax.plot(x, y, 'bx')
         ax.plot(inputs, outputs.T)
+        plt.grid()
+        plt.title('Iteration %i' % t)
         ax.set_xlim([-10, 10])
         ax.set_ylim([-2, 3])
         # Adding leading zeros for the sort later
@@ -166,7 +168,7 @@ for t in range(1000):
         if len(t)!=3:
             t = ((3-len(t)) * '0') + t
 
-        plt.savefig('./tmp_plots/%i_p.jpeg' % t)
+        plt.savefig('./tmp_plots/%s_p.jpeg' % t)
         plt.close()
 
 # Pulling in the images that were exported 
@@ -179,7 +181,7 @@ for filename in file_names:
 imageio.mimsave('movie_bayesian_nn.gif', images)
 
 # Removing all of the old files
-#os.system('rm -rf ./tmp_plots/')
+os.system('rm -rf ./tmp_plots/')
 
 # Plotting the variational objective function
 plt.figure(figsize=(12,8))
