@@ -164,11 +164,7 @@ for t in range(1000):
         ax.set_ylim([-2, 3])
         # Adding leading zeros for the sort later
 
-        t = str(t)
-        if len(t)!=3:
-            t = ((3-len(t)) * '0') + t
-
-        plt.savefig('./tmp_plots/%s_p.jpeg' % t)
+        plt.savefig('./tmp_plots/%s_p.jpeg' % str(t).zfill(3) )
         plt.close()
 
 # Pulling in the images that were exported 
